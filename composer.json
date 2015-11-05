@@ -7,6 +7,7 @@
   "keywords": ["module", "xp"],
   "require" : {
     "xp-framework/core": "~6.0",
+    "xp-framework/telephony": "~6.0"
     "php" : ">=5.4.0"
   },
   "autoload" : {

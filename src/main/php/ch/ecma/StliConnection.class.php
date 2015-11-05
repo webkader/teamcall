@@ -6,18 +6,6 @@ use util\telephony\TelephonyException;
 use util\telephony\TelephonyProvider;
 use util\telephony\TelephonyTerminal;
 
-// Response codes
-define('STLI_INIT_RESPONSE',      'error_ind SUCCESS STLI Version "%d"');
-define('STLI_BYE_RESPONSE',       'error_ind SUCCESS BYE');
-define('STLI_MON_START_RESPONSE', 'error_ind SUCCESS MonitorStart');
-define('STLI_MON_STOP_RESPONSE',  'error_ind SUCCESS MonitorStop');
-define('STLI_MAKECALL_RESPONSE',  'error_ind SUCCESS MakeCall');
-define('STLI_MON_CALL_INITIATED', 'Initiated %d makeCall %s %s');
-define('STLI_MON_CALL_DEVICEINFO','DeviceInformation %d %d (%s)');
-
-// Supported protocol versions
-define('STLI_VERSION_2',      2);
-
 /**
  * STLI Client
  *
@@ -42,6 +30,19 @@ define('STLI_VERSION_2',      2);
  * @see      http://www.ecma.ch/ecma1/STAND/ecma-323.htm
  */
 class StliConnection extends TelephonyProvider {
+
+  // Response codes
+  const STLI_INIT_RESPONSE =       'error_ind SUCCESS STLI Version "%d"';
+  const STLI_BYE_RESPONSE =        'error_ind SUCCESS BYE';
+  const STLI_MON_START_RESPONSE =  'error_ind SUCCESS MonitorStart';
+  const STLI_MON_STOP_RESPONSE =   'error_ind SUCCESS MonitorStop';
+  const STLI_MAKECALL_RESPONSE =   'error_ind SUCCESS MakeCall';
+  const STLI_MON_CALL_INITIATED =  'Initiated %d makeCall %s %s';
+  const STLI_MON_CALL_DEVICEINFO = 'DeviceInformation %d %d (%s)';
+
+  // Supported protocol versions
+  const STLI_VERSION_2 =       2;
+
   private
     $sock       = null,
     $version    = 0;
@@ -58,7 +59,7 @@ class StliConnection extends TelephonyProvider {
    * @param   peer.Socket sock
    * @param   int version default STLI_VERSION_2
    */
-  public function __construct($sock, $version= STLI_VERSION_2) {
+  public function __construct($sock, $version= self::STLI_VERSION_2) {
     $this->sock= $sock;
     $this->version= $version;
   }
@@ -95,7 +96,7 @@ class StliConnection extends TelephonyProvider {
     if ($this->sock->isConnected()) {
       throw new IllegalStateException('Cannot set version after already having connected');
     }
-    
+
     $this->version= $version;
   }
 
@@ -183,10 +184,9 @@ class StliConnection extends TelephonyProvider {
    * @throws  util.telephony.TelephonyException in case a protocol error occurs
    */
   public function close() {
-    if (false === $this->_expect(
-      STLI_BYE_RESPONSE,
-      $this->_sockcmd('BYE')
-    )) return false;
+    if (false === $this->_expect(self::STLI_BYE_RESPONSE, $this->_sockcmd('BYE'))) {
+      return false;
+    }
     
     return $this->sock->close();
   }
@@ -200,7 +200,7 @@ class StliConnection extends TelephonyProvider {
    */
   public function createCall($terminal, $destination) {
     if (false === $this->_expect(
-      STLI_MAKECALL_RESPONSE,
+      self::STLI_MAKECALL_RESPONSE,
       $this->_sockcmd('MakeCall %s %s',
         $terminal->getAttachedNumber(),
         $destination->getNumber()
@@ -208,8 +208,8 @@ class StliConnection extends TelephonyProvider {
 
     if ($terminal->isObserved()) {
       if (
-        !$this->_expectf(STLI_MON_CALL_INITIATED, $this->_read()) ||
-        !$this->_expectf(STLI_MON_CALL_DEVICEINFO, $this->_read())
+        !$this->_expectf(self::STLI_MON_CALL_INITIATED, $this->_read()) ||
+        !$this->_expectf(self::STLI_MON_CALL_DEVICEINFO, $this->_read())
       ) return null;
     }
     return new TelephonyCall($terminal->address, $destination);
@@ -235,13 +235,13 @@ class StliConnection extends TelephonyProvider {
   public function observeTerminal($terminal, $status) {
     if ($status) {
       $success= $this->_expect(
-        STLI_MON_START_RESPONSE,
+        self::STLI_MON_START_RESPONSE,
         $this->_sockcmd('MonitorStart %s', $terminal->getAttachedNumber())
       );
       $success && $terminal->setObserved(true);
     } else {
       $success= $this->_expect(
-        STLI_MON_STOP_RESPONSE,
+        self::STLI_MON_STOP_RESPONSE,
         $this->_sockcmd('MonitorStop %s', $terminal->getAttachedNumber())
       );
       $success && $terminal->setObserved(false);
