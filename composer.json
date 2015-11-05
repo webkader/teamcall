@@ -1,0 +1,15 @@
+{
+  "name" : "xp-forge/teamcall",
+  "type" : "library",
+  "homepage" : "http://xp-framework.net/",
+  "license" : "BSD-3-Clause",
+  "description" : "TeamCall STLI Client (Simple Telephony Interface)",
+  "keywords": ["module", "xp"],
+  "require" : {
+    "xp-framework/core": "~6.0",
+    "php" : ">=5.4.0"
+  },
+  "autoload" : {
+    "files" : ["src/main/php/autoload.php"]
+  }
+}
